@@ -115,3 +115,63 @@ char* Base64::encode(const char* inp_str, const int& inp_len)
 
     return out_str;
 }
+
+char* Base64::decode(const char* inp_str, const int& inp_len)
+{
+    int out_len = (inp_len * 6) / 8;
+
+    if (inp_str[inp_len - 1] == '=')
+        out_len--;
+    if (inp_str[inp_len - 2] == '=')
+        out_len--;
+
+    char* out_str = new char[out_len + 1]; // plus one for '\0' char at the end
+    char* out_ptr = out_str;
+
+    short bit_counter = 0;
+    char tmp_ch;
+    char tmp_6bit;
+
+    for (int i = 0; i < inp_len; i++)
+    {
+        tmp_ch = inp_str[i];
+        if (tmp_ch == '=')
+            break;
+        else if (tmp_ch >= 'A' && tmp_ch <= 'Z')
+            tmp_6bit = tmp_ch - 'A';
+        else if (tmp_ch >= 'a' && tmp_ch <= 'z')
+            tmp_6bit = tmp_ch - 'a' + 26;
+        else if (tmp_ch >= '0' && tmp_ch <= '9')
+            tmp_6bit = tmp_ch - '0' + 52;
+        else if (tmp_ch == '+')
+            tmp_6bit = 62;
+        else if (tmp_ch == '/')
+            tmp_6bit = 63;
+        else
+            tmp_6bit = 0;
+        tmp_6bit <<= 2;
+
+        for (int j = 0; j < 6; j++)
+        {
+            if ((tmp_6bit & 0b10000000))  // explicit operator ordering is required
+                *out_ptr |= 0b00000001;
+            else
+                *out_ptr &= 0b11111110;
+            
+            tmp_6bit <<= 1;
+
+            bit_counter++;
+            if (bit_counter == 8)
+            {
+                bit_counter = 0;
+                out_ptr++;
+            }
+            else
+                *out_ptr <<= 1;
+        }
+    }
+
+    *out_ptr = '\0';
+
+    return out_str;
+}
